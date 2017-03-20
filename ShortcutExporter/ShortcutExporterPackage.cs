@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Globalization;
 using System.Runtime.InteropServices;
 using System.ComponentModel.Design;
-using Microsoft.Win32;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using EnvDTE80;
 using EnvDTE;
@@ -31,11 +25,11 @@ namespace MadsKristensen.ShortcutExporter
 
             _dte = GetGlobalService(typeof(DTE)) as DTE2;
 
-            OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            var mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (null != mcs)
             {
-                CommandID menuCommandID = new CommandID(GuidList.guidShortcutExporterCmdSet, (int)PkgCmdIDList.cmdExportShortcuts);
-                MenuCommand menuItem = new MenuCommand(MenuItemCallback, menuCommandID);
+                var menuCommandID = new CommandID(GuidList.guidShortcutExporterCmdSet, (int)PkgCmdIDList.cmdExportShortcuts);
+                var menuItem = new MenuCommand(MenuItemCallback, menuCommandID);
                 mcs.AddCommand(menuItem);
             }
         }
@@ -48,7 +42,7 @@ namespace MadsKristensen.ShortcutExporter
                 DefaultExt = ".xml",
                 FileName = GetVersion() + ".xml",
                 CheckPathExists = true,
-                Filter = "XML Files (*.xml)|*.xml|All files (*.*)|*.*",
+                Filter = @"XML Files (*.xml)|*.xml|All files (*.*)|*.*",
             };
 
             if (dialog.ShowDialog() == DialogResult.OK)
@@ -89,9 +83,9 @@ namespace MadsKristensen.ShortcutExporter
 
         private void WriteCommands(XmlWriter writer)
         {
-            List<Command> commands = GetCommands();
+            IEnumerable<Command> commands = GetCommands();
 
-            foreach (EnvDTE.Command command in commands.OrderBy(c => c.Name))
+            foreach (var command in commands.OrderBy(c => c.Name))
             {
                 var bindings = command.Bindings as object[];
 
@@ -110,23 +104,15 @@ namespace MadsKristensen.ShortcutExporter
             }
         }
 
-        private List<Command> GetCommands()
+        private IEnumerable<Command> GetCommands()
         {
-            List<Command> commands = new List<Command>();
-
-            foreach (EnvDTE.Command command in _dte.Commands)
-            {
-                if (!string.IsNullOrEmpty(command.Name))
-                    commands.Add(command);
-            }
-
-            return commands;
+            return _dte.Commands.Cast<Command>().Where(command => !string.IsNullOrEmpty(command.Name)).ToList();
         }
 
         private static IEnumerable<string> GetBindings(IEnumerable<object> bindings)
         {
-            var result = bindings.Select(binding => binding.ToString().IndexOf("::") >= 0
-                ? binding.ToString().Substring(binding.ToString().IndexOf("::") + 2)
+            var result = bindings.Select(binding => binding.ToString().IndexOf("::", StringComparison.Ordinal) >= 0
+                ? binding.ToString().Substring(binding.ToString().IndexOf("::", StringComparison.Ordinal) + 2)
                 : binding.ToString()).Distinct();
 
 

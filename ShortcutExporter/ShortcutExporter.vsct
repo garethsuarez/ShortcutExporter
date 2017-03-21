@@ -5,17 +5,35 @@
   <Extern href="vsshlids.h"/>
 
   <Commands package="guidShortcutExporterPkg">
+    <Menus>
+      <Menu guid="guidShortcutExporterCmdSet" id="SubMenu" priority="0x0100" type="Menu">
+        <Parent guid="guidShortcutExporterCmdSet" id="MyMenuGroup"/>
+        <Strings>
+          <ButtonText>Export Shortcuts</ButtonText>
+          <CommandName>Export Shortcuts</CommandName>
+        </Strings>
+      </Menu>
+    </Menus>
     <Groups>
       <Group guid="guidShortcutExporterCmdSet" id="MyMenuGroup" priority="0x9000">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS"/>
+      </Group>
+      <Group guid="guidShortcutExporterCmdSet" id="SubMenuGroup" priority="0x000">
+        <Parent guid="guidShortcutExporterCmdSet" id="SubMenu"/>
       </Group>
     </Groups>
 
     <Buttons>
       <Button guid="guidShortcutExporterCmdSet" id="cmdExportShortcuts" priority="0x0100" type="Button">
-        <Parent guid="guidShortcutExporterCmdSet" id="MyMenuGroup" />
+        <Parent guid="guidShortcutExporterCmdSet" id="SubMenuGroup" />
         <Strings>
-          <ButtonText>Export Shortcuts...</ButtonText>
+          <ButtonText>Export Shortcuts as XML...</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidShortcutExporterCmdSet" id="cmdExportShortcutsJSON" priority="0x0200" type="Button">
+        <Parent guid="guidShortcutExporterCmdSet" id="SubMenuGroup" />
+        <Strings>
+          <ButtonText>Export Shortcuts as JSON...</ButtonText>
         </Strings>
       </Button>
     </Buttons>
@@ -26,7 +44,10 @@
 
     <GuidSymbol name="guidShortcutExporterCmdSet" value="{3d801e7c-14d7-487f-9389-06e93e5008cd}">
       <IDSymbol name="MyMenuGroup" value="0x1020" />
+      <IDSymbol name="SubMenu" value="0x1150"/>
+      <IDSymbol name="SubMenuGroup" value="0x1100"/>
       <IDSymbol name="cmdExportShortcuts" value="0x0100" />
+      <IDSymbol name="cmdExportShortcutsJSON" value="0x0200" />
     </GuidSymbol>
   </Symbols>
 

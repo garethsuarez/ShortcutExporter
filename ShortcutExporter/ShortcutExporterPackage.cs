@@ -8,6 +8,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Xml;
+using Newtonsoft.Json;
 
 namespace MadsKristensen.ShortcutExporter
 {
@@ -31,6 +32,10 @@ namespace MadsKristensen.ShortcutExporter
                 var menuCommandID = new CommandID(GuidList.guidShortcutExporterCmdSet, (int)PkgCmdIDList.cmdExportShortcuts);
                 var menuItem = new MenuCommand(MenuItemCallback, menuCommandID);
                 mcs.AddCommand(menuItem);
+
+                var menuCommandIDJson = new CommandID(GuidList.guidShortcutExporterCmdSet, (int)PkgCmdIDList.cmdExportShortcutsJSON);
+                var menuItemJson = new MenuCommand(MenuItemJsonCallback, menuCommandIDJson);
+                mcs.AddCommand(menuItemJson);
             }
         }
 
@@ -48,6 +53,23 @@ namespace MadsKristensen.ShortcutExporter
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 WriteDocument(dialog.FileName);
+            }
+        }
+
+        private void MenuItemJsonCallback(object sender, EventArgs e)
+        {
+            var dialog = new SaveFileDialog()
+            {
+                AddExtension = true,
+                DefaultExt = ".json",
+                FileName = GetVersion() + ".json",
+                CheckPathExists = true,
+                Filter = @"Json Files (*.json)|*.json|All files (*.*)|*.*",
+            };
+
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                WriteJsonDocument(dialog.FileName);
             }
         }
 
@@ -80,6 +102,33 @@ namespace MadsKristensen.ShortcutExporter
                 writer.WriteEndElement();
             }
         }
+
+        private void WriteJsonDocument(string fileName)
+        {
+            var data = new List<JsonData>();
+
+            IEnumerable<Command> commands = GetCommands();
+            foreach (var command in commands.OrderBy(c => c.Name))
+            {
+                var bindings = command.Bindings as object[];
+
+                if (bindings != null && bindings.Length > 0)
+                {
+                    var shortcuts = GetBindings(bindings);
+
+                    data.AddRange(shortcuts.Select(shortcut => new JsonData
+                    {
+                        Name = command.Name,
+                        Shortcut = shortcut
+                    }));
+                }
+            }
+
+            var json = JsonConvert.SerializeObject(data.ToArray());
+            System.IO.File.WriteAllText(fileName,json);
+        }
+
+        
 
         private void WriteCommands(XmlWriter writer)
         {
@@ -118,5 +167,11 @@ namespace MadsKristensen.ShortcutExporter
 
             return result;
         }
+    }
+
+    public class JsonData
+    {
+        public string Shortcut { get; set; }
+        public string Name { get; set; }
     }
 }
